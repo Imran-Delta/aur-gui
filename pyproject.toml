@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aur-gui"
+version = "1.2.0"
+description = "Unified AUR/Pacman backend library for Arch Linux, plus a Tkinter GUI"
+requires-python = ">=3.9"
+readme = "README.md"
+
+[project.scripts]
+aur-gui = "aur_gui:main"
+
+[tool.setuptools.packages.find]
+include = ["pkgmanager*"]
+
+[tool.setuptools]
+py-modules = ["aur_gui"]

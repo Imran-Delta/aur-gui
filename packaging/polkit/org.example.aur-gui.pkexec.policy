@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE policyconfig PUBLIC
+ "-//freedesktop//DTD PolicyKit Policy Configuration 1.0//EN"
+ "http://www.freedesktop.org/software/polkit/policyconfig.dtd">
+<policyconfig>
+  <!--
+    Adjust "org.example" to a reverse-domain you actually control before
+    installing this anywhere. On its own, this file can only grant/require
+    auth for pkexec-ing the binary at the given path as a WHOLE -- it has no
+    way to look at arguments (e.g. -Sy vs -S vs -R). If you want caching to
+    apply only to database refresh and not to install/remove, this file
+    must be paired with 10-aur-gui-refresh.rules in the same directory,
+    which is what actually does the argument-level distinction.
+
+    Without the .rules file, installing just this .policy is still useful:
+    it defines the action id below, but the default policykit.exec action
+    (id="org.freedesktop.policykit.exec") is what actually applies until a
+    .rules file remaps matching invocations to this action instead.
+  -->
+  <action id="org.example.aur-gui.pkexec.refresh">
+    <description>Run pacman/AUR helper database refresh as administrator</description>
+    <message>Authentication is required to refresh the package database</message>
+    <icon_name>system-software-install</icon_name>
+    <defaults>
+      <allow_any>auth_admin</allow_any>
+      <allow_inactive>auth_admin</allow_inactive>
+      <allow_active>auth_admin_keep</allow_active>
+    </defaults>
+    <annotate key="org.freedesktop.policykit.exec.path">/usr/bin/pacman</annotate>
+    <!--
+      If you force a non-pacman helper in Settings, change the path above
+      to that helper's actual binary (e.g. /usr/bin/yay) -- annotate.path
+      must match exactly what --self-test reports resolving via `which`.
+    -->
+  </action>
+</policyconfig>

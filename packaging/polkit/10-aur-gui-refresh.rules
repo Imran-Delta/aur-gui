@@ -1,0 +1,31 @@
+// Install to /etc/polkit-1/rules.d/10-aur-gui-refresh.rules and restart
+// the polkit service. Pairs with org.example.aur-gui.pkexec.policy in this
+// same directory -- that file alone can only grant/deny by binary path;
+// this is what actually looks at the invoked arguments.
+//
+// Remaps a `pkexec pacman -Sy ...`-shaped invocation (database refresh
+// only) to the org.example.aur-gui.pkexec.refresh action defined in the
+// paired .policy file, so ONLY refresh gets auth_admin_keep (cached auth).
+// install/remove/full-update invocations fall through untouched and keep
+// the normal, non-cached policykit.exec prompt every time.
+polkit.addRule(function(action, subject) {
+    if (action.id != "org.freedesktop.policykit.exec") {
+        return polkit.Result.NOT_HANDLED;
+    }
+
+    var commandLine = action.lookup("command_line");
+    if (!commandLine) {
+        return polkit.Result.NOT_HANDLED;
+    }
+
+    // Matches "pacman -Sy", "pacman -Sy ...", "yay -Sy ...", etc. --
+    // deliberately word-boundary-anchored on -Sy so it doesn't also match
+    // an unrelated flag that merely contains those two characters.
+    var isRefreshOnly = /(^|\/)(pacman|yay|paru|trizen|pikaur)\s+-Sy(\s|$)/.test(commandLine);
+    if (!isRefreshOnly) {
+        return polkit.Result.NOT_HANDLED;
+    }
+
+    action.id = "org.example.aur-gui.pkexec.refresh";
+    return polkit.Result.NOT_HANDLED;  // re-evaluate under the new action id
+});
